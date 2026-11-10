@@ -1,0 +1,26 @@
+name: Generate iPhone icon
+on:
+  push:
+    paths:
+      - 'app-icon.svg'
+      - '.github/workflows/icon.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  icon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install cairosvg
+      - run: |
+          python - <<'PY'
+          import cairosvg
+          for size, name in [(180,'apple-touch-icon.png'),(512,'icon-512.png')]:
+              cairosvg.svg2png(url='app-icon.svg',write_to=name,output_width=size,output_height=size)
+          PY
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apple-touch-icon.png icon-512.png
+          if ! git diff --cached --quiet; then git commit -m "Generate iOS PNG icons from FFS SVG"; git push; fi
